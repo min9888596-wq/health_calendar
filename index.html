@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f5f7ee">
+	<title>달콩 운동 달력</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #24352e;
+			--muted: #7e8980;
+			--paper: #f5f7ee;
+			--surface: #fffef9;
+			--line: #e9ece2;
+			--coral: #ef795f;
+			--coral-soft: #fff0e9;
+			--green: #346b52;
+			--lime: #d9ef8b;
+			--shadow: 0 18px 48px rgba(47, 66, 48, .08);
+			font-family: 'Gowun Dodum', sans-serif;
+			font-synthesis: none;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			color: var(--ink);
+			background-color: var(--paper);
+			background-image: radial-gradient(#dce6d4 0.8px, transparent 0.8px);
+			background-size: 18px 18px;
+		}
+
+		button { font: inherit; }
+
+		.app-shell {
+			width: min(1040px, 100% - 40px);
+			margin: 0 auto;
+			padding: 28px 0 48px;
+			animation: appear .55s ease both;
+		}
+
+		.topbar, .brand, .top-actions, .month-toolbar, .month-controls,
+		.calendar-heading, .coach-heading, .date-heading, .workout-title,
+		.completion-row, .week-summary, .bottom-note {
+			display: flex;
+			align-items: center;
+		}
+
+		.topbar { justify-content: space-between; margin-bottom: 24px; }
+		.brand { gap: 10px; font-size: 18px; font-weight: 700; }
+
+		.brand-mark {
+			display: grid;
+			width: 38px;
+			height: 38px;
+			place-items: center;
+			border-radius: 13px;
+			background: var(--lime);
+			font-size: 21px;
+			transform: rotate(-5deg);
+		}
+
+		.top-actions { gap: 9px; color: var(--muted); font-size: 13px; }
+
+		.streak-pill {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			padding: 9px 12px;
+			border: 1px solid #e9eadd;
+			border-radius: 999px;
+			background: rgba(255, 254, 249, .8);
+			color: var(--ink);
+			font-weight: 700;
+		}
+
+		.month-toolbar { justify-content: space-between; margin: 0 0 18px; }
+		.month-controls { gap: 8px; }
+
+		.month-label {
+			min-width: 150px;
+			margin: 0;
+			font-size: 24px;
+			font-weight: 700;
+			letter-spacing: 0;
+		}
+
+		.month-label span {
+			margin-left: 7px;
+			color: #92998e;
+			font-family: 'Nunito', sans-serif;
+			font-size: 14px;
+			font-weight: 700;
+		}
+
+		.icon-button, .today-button {
+			display: inline-grid;
+			min-width: 38px;
+			height: 38px;
+			place-items: center;
+			border: 1px solid #e7e9df;
+			border-radius: 12px;
+			background: var(--surface);
+			color: var(--ink);
+			cursor: pointer;
+			transition: transform .18s ease, background .18s ease;
+		}
+
+		.icon-button { font-family: 'Nunito', sans-serif; font-size: 21px; }
+		.icon-button:hover, .today-button:hover { transform: translateY(-2px); background: white; }
+		.today-button { padding: 0 13px; font-size: 13px; font-weight: 700; }
+
+		.dashboard {
+			display: grid;
+			grid-template-columns: minmax(0, 1.55fr) minmax(285px, .9fr);
+			align-items: start;
+			gap: 20px;
+		}
+
+		.calendar-card, .coach-card, .workout-card {
+			border: 1px solid rgba(231, 234, 224, .85);
+			border-radius: 20px;
+			background: var(--surface);
+			box-shadow: var(--shadow);
+		}
+
+		.calendar-card { padding: 22px 22px 18px; }
+		.calendar-heading { justify-content: space-between; margin-bottom: 17px; }
+
+		.calendar-heading h2, .coach-heading h2, .workout-title h2 {
+			margin: 0;
+			font-size: 16px;
+			font-weight: 700;
+		}
+
+		.calendar-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+		.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+
+		.weekday {
+			padding: 8px 0 12px;
+			color: #9ba196;
+			font-family: 'Nunito', sans-serif;
+			font-size: 11px;
+			font-weight: 800;
+			text-align: center;
+		}
+
+		.weekday:first-child { color: #e38370; }
+		.day-cell { display: grid; min-width: 0; place-items: center; padding: 3px 0; }
+
+		.day-button {
+			position: relative;
+			display: grid;
+			width: min(44px, 100%);
+			aspect-ratio: 1;
+			place-items: center;
+			border: 0;
+			border-radius: 15px;
+			background: transparent;
+			color: var(--ink);
+			cursor: pointer;
+			font-family: 'Nunito', sans-serif;
+			font-size: 14px;
+			font-weight: 700;
+			transition: background .16s ease, color .16s ease, transform .16s ease;
+		}
+
+		.day-button:hover { background: #f1f4e8; transform: scale(1.06); }
+		.day-button.outside { color: #c6cbc1; }
+		.day-button.sunday { color: #df8a78; }
+		.day-button.today { outline: 1.5px solid var(--coral); outline-offset: -2px; }
+		.day-button.selected { background: var(--green); color: white; }
+		.day-button.selected.today { outline: 0; }
+
+		.day-dot {
+			position: absolute;
+			bottom: 4px;
+			width: 4px;
+			height: 4px;
+			border-radius: 50%;
+			background: var(--coral);
+		}
+
+		.day-button.selected .day-dot { background: var(--lime); }
+
+		.week-summary {
+			justify-content: space-between;
+			gap: 10px;
+			margin-top: 17px;
+			padding-top: 15px;
+			border-top: 1px solid var(--line);
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.week-summary strong { color: var(--green); font-weight: 700; }
+
+		.side-column { display: grid; gap: 14px; }
+
+		.coach-card {
+			position: relative;
+			overflow: hidden;
+			min-height: 260px;
+			padding: 20px;
+			border-color: transparent;
+			background: var(--coach-bg, #e8f2df);
+			box-shadow: none;
+		}
+
+		.coach-card::after {
+			position: absolute;
+			right: -23px;
+			bottom: -42px;
+			width: 180px;
+			height: 180px;
+			border: 1px solid rgba(255,255,255,.55);
+			border-radius: 50%;
+			box-shadow: 0 0 0 19px rgba(255,255,255,.18), 0 0 0 40px rgba(255,255,255,.13);
+			content: '';
+			pointer-events: none;
+		}
+
+		.coach-heading { justify-content: space-between; position: relative; z-index: 1; }
+		.coach-heading h2 { font-size: 14px; }
+
+		.coach-tag {
+			padding: 6px 9px;
+			border: 1px solid rgba(44, 72, 56, .1);
+			border-radius: 999px;
+			background: rgba(255,255,255,.54);
+			color: var(--green);
+			font-size: 11px;
+			font-weight: 700;
+		}
+
+		.mascot-wrap {
+			position: relative;
+			z-index: 1;
+			display: grid;
+			width: 104px;
+			height: 104px;
+			margin: 15px auto 7px;
+			place-items: center;
+			border: 1px solid rgba(255,255,255,.72);
+			border-radius: 34px;
+			background: rgba(255,255,255,.48);
+			font-size: 65px;
+			line-height: 1;
+			filter: drop-shadow(0 5px 1px rgba(72, 85, 57, .08));
+			animation: bob 3s ease-in-out infinite;
+		}
+
+		.coach-message { position: relative; z-index: 1; text-align: center; }
+		.coach-message h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+		.coach-message p { margin: 0; color: #586a5b; font-size: 12px; line-height: 1.6; }
+
+		.workout-card { padding: 19px; }
+		.workout-title { justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+		.workout-title h2 { font-size: 15px; }
+		.workout-date { color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700; }
+		.workout-name { margin: 0 0 4px; font-size: 19px; font-weight: 700; }
+		.workout-desc { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+
+		.exercise-list { display: grid; gap: 9px; margin: 16px 0; padding: 0; list-style: none; }
+
+		.exercise-list li {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding-bottom: 9px;
+			border-bottom: 1px solid #f0f1eb;
+			font-size: 13px;
+		}
+
+		.exercise-list li:last-child { padding-bottom: 0; border-bottom: 0; }
+		.exercise-list strong { color: var(--green); font-family: 'Nunito', sans-serif; font-size: 12px; }
+
+		.completion-row { justify-content: space-between; gap: 10px; padding-top: 13px; border-top: 1px solid var(--line); }
+		.completion-row span { color: var(--muted); font-size: 12px; }
+
+		.complete-button {
+			display: inline-flex;
+			min-height: 38px;
+			align-items: center;
+			justify-content: center;
+			gap: 7px;
+			padding: 0 13px;
+			border: 0;
+			border-radius: 11px;
+			background: var(--coral);
+			color: white;
+			cursor: pointer;
+			font-size: 12px;
+			font-weight: 700;
+			transition: transform .18s ease, background .18s ease;
+		}
+
+		.complete-button:hover { transform: translateY(-1px); background: #e66b52; }
+		.complete-button.done { background: var(--green); }
+
+		.bottom-note {
+			justify-content: center;
+			gap: 6px;
+			margin-top: 19px;
+			color: #899287;
+			font-size: 11px;
+		}
+
+		@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+		@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+
+		@media (max-width: 760px) {
+			.app-shell { width: min(520px, 100% - 28px); padding: 18px 0 30px; }
+			.topbar { margin-bottom: 21px; }
+			.dashboard { grid-template-columns: 1fr; gap: 14px; }
+			.calendar-card { padding: 17px 12px 14px; border-radius: 17px; }
+			.side-column { grid-template-columns: 1fr; gap: 12px; }
+			.coach-card { min-height: 238px; padding: 17px; border-radius: 17px; }
+			.mascot-wrap { width: 88px; height: 88px; margin: 11px auto 6px; border-radius: 29px; font-size: 56px; }
+			.workout-card { padding: 17px; border-radius: 17px; }
+			.day-button { width: min(42px, 100%); border-radius: 13px; }
+		}
+
+		@media (max-width: 380px) {
+			.app-shell { width: calc(100% - 22px); }
+			.month-label { min-width: 0; font-size: 21px; }
+			.day-button { font-size: 13px; }
+			.calendar-heading p { font-size: 11px; }
+			.top-actions { font-size: 12px; }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+		}
+	</style>
+</head>
+<body>
+	<main class="app-shell">
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">🌱</span><span>달콩 운동 달력</span></div>
+			<div class="top-actions">
+				<div class="streak-pill" aria-label="이번 달 운동 완료 횟수"><span aria-hidden="true">✨</span><span id="month-count">0</span><span>일 운동했어요</span></div>
+			</div>
+		</header>
+
+		<section class="month-toolbar" aria-label="달력 월 선택">
+			<div class="month-controls">
+				<button class="icon-button" id="prev-month" type="button" aria-label="이전 달">‹</button>
+				<h1 class="month-label" id="month-label"></h1>
+				<button class="icon-button" id="next-month" type="button" aria-label="다음 달">›</button>
+			</div>
+			<button class="today-button" id="go-today" type="button">오늘</button>
+		</section>
+
+		<div class="dashboard">
+			<section class="calendar-card" aria-label="월간 달력">
+				<div class="calendar-heading">
+					<h2>이번 달 한 걸음씩</h2>
+					<p>날짜를 눌러 오늘의 운동을 확인해요</p>
+				</div>
+				<div class="calendar-grid" id="calendar" role="grid" aria-label="달력"></div>
+				<div class="week-summary"><span>작은 운동도 충분히 멋져요</span><strong id="week-count">이번 주 0일 완료</strong></div>
+			</section>
+
+			<aside class="side-column">
+				<section class="coach-card" id="coach-card" aria-label="이달의 운동 코치">
+					<div class="coach-heading"><h2>이달의 운동 코치</h2><span class="coach-tag" id="coach-month"></span></div>
+					<div class="mascot-wrap" id="mascot" role="img" aria-label="이달의 동물 코치"></div>
+					<div class="coach-message"><h3 id="coach-cheer"></h3><p id="coach-quote"></p></div>
+				</section>
+
+				<section class="workout-card" aria-label="선택한 날짜의 운동">
+					<div class="workout-title"><h2>오늘의 운동 코칭</h2><span class="workout-date" id="selected-date"></span></div>
+					<h3 class="workout-name" id="workout-name"></h3>
+					<p class="workout-desc" id="workout-description"></p>
+					<ul class="exercise-list" id="exercise-list"></ul>
+					<div class="completion-row"><span id="completion-hint">내 속도로 천천히 해봐요</span><button class="complete-button" id="complete-button" type="button"></button></div>
+				</section>
+			</aside>
+		</div>
+		<footer class="bottom-note"><span aria-hidden="true">☁️</span> 쉬는 날도 운동의 일부예요. 몸의 신호를 잘 들어주세요.</footer>
+	</main>
+
+	<script>
+		const monthlyCoaches = [
+			{ animal: '🐰', name: '토끼 코치', cheer: '새해엔 가볍게, 깡충!', quote: '작은 시작이 가장 큰 용기야. 오늘 한 번 움직여볼까?', bg: '#e9f1df', plan: '가벼운 전신 깨우기', exercises: [['제자리 걷기', '2분'], ['의자 스쿼트', '10회 × 2세트'], ['어깨 돌리기', '앞뒤 10회']] },
+			{ animal: '🐻', name: '곰 코치', cheer: '포근하게, 꾸준하게!', quote: '무리하지 않아도 괜찮아. 네 페이스가 제일 좋아.', bg: '#f2e9de', plan: '튼튼한 하체 만들기', exercises: [['스쿼트', '10회 × 2세트'], ['뒤꿈치 들기', '15회 × 2세트'], ['종아리 스트레칭', '양쪽 20초']] },
+			{ animal: '🐸', name: '개구리 코치', cheer: '봄처럼 폴짝! 화이팅!', quote: '오늘의 움직임이 내일의 활력이 돼. 같이 해보자!', bg: '#e4f1d8', plan: '산뜻한 유산소 운동', exercises: [['제자리 빠르게 걷기', '3분'], ['스텝 터치', '좌우 20회'], ['허벅지 스트레칭', '양쪽 20초']] },
+			{ animal: '🐣', name: '병아리 코치', cheer: '한 걸음이면 충분해!', quote: '새싹처럼 쑥쑥 자라는 중! 오늘도 정말 잘하고 있어.', bg: '#f7efc9', plan: '상체 쭉쭉 스트레칭', exercises: [['팔 위로 뻗기', '10초 × 3회'], ['벽 짚고 팔굽혀펴기', '8회 × 2세트'], ['목 좌우 스트레칭', '양쪽 15초']] },
+			{ animal: '🦊', name: '여우 코치', cheer: '산뜻하게 움직여볼까?', quote: '완벽한 계획보다 즐거운 10분이 더 멋져!', bg: '#f7e5d7', plan: '기분 전환 걷기', exercises: [['산책 또는 제자리 걷기', '10분'], ['팔 크게 흔들기', '1분'], ['발목 돌리기', '양쪽 10회']] },
+			{ animal: '🐼', name: '판다 코치', cheer: '대나무처럼 쑥쑥!', quote: '잘 쉬고, 잘 움직이고. 둘 다 네 몸을 위한 선물이야.', bg: '#e3eeea', plan: '코어에 힘 모으기', exercises: [['누워서 복식 호흡', '5회'], ['버드독', '양쪽 8회'], ['고양이 자세 스트레칭', '5회']] },
+			{ animal: '🦁', name: '사자 코치', cheer: '너의 여름을 응원해!', quote: '힘이 나는 만큼만 해도 좋아. 오늘도 멋진 도전이야!', bg: '#f6e9c9', plan: '활기찬 전신 움직임', exercises: [['팔 벌려 가볍게 뛰기', '20회'], ['의자 스쿼트', '12회 × 2세트'], ['허벅지 앞 스트레칭', '양쪽 20초']] },
+			{ animal: '🐬', name: '돌고래 코치', cheer: '시원하게 파도 타자!', quote: '물결처럼 부드럽게, 네 몸이 편한 만큼 움직여봐.', bg: '#dceff0', plan: '부드러운 전신 스트레칭', exercises: [['양팔 크게 돌리기', '앞뒤 10회'], ['옆구리 늘리기', '양쪽 20초'], ['제자리 걷기', '3분']] },
+			{ animal: '🐿️', name: '다람쥐 코치', cheer: '차곡차곡, 아주 좋아!', quote: '쌓인 작은 습관은 큰 힘이 돼. 오늘도 도토리 하나!', bg: '#f1e6d8', plan: '탄탄한 다리 운동', exercises: [['의자 스쿼트', '10회 × 2세트'], ['벽 짚고 뒤로 다리 들기', '양쪽 10회'], ['햄스트링 스트레칭', '양쪽 20초']] },
+			{ animal: '🐧', name: '펭귄 코치', cheer: '같이 걸으면 덜 추워!', quote: '한 번에 멀리 갈 필요 없어. 한 걸음씩 함께 가자.', bg: '#e1eaf0', plan: '균형 잡는 코어 운동', exercises: [['한 발 서기', '양쪽 15초'], ['버드독', '양쪽 8회'], ['무릎 들어 걷기', '1분']] },
+			{ animal: '🦦', name: '수달 코치', cheer: '오늘도 즐겁게 놀아보자!', quote: '재미있는 움직임이 오래가는 운동이야. 가볍게 시작!', bg: '#e2eee8', plan: '기분 좋은 산책 루틴', exercises: [['산책 또는 제자리 걷기', '10분'], ['어깨 으쓱하기', '10회'], ['종아리 스트레칭', '양쪽 20초']] },
+			{ animal: '🐱', name: '고양이 코치', cheer: '올해도 네 편이야!', quote: '잘 해낸 날도, 쉬어간 날도 모두 너의 기록이야.', bg: '#f0e8ef', plan: '한 해 마무리 스트레칭', exercises: [['기지개 켜기', '10초 × 3회'], ['앉아서 상체 숙이기', '20초'], ['천천히 깊게 호흡하기', '5회']] }
+		];
+
+		const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+		const today = new Date();
+		let displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+		let selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		const storageKey = 'dalkong-workout-dates-v1';
+		let completedDates = loadCompletedDates();
+
+		function loadCompletedDates() {
+			try {
+				const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+				return new Set(Array.isArray(saved) ? saved : []);
+			} catch {
+				return new Set();
+			}
+		}
+
+		function dateKey(date) {
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
+		function monthKey(date) {
+			return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+		}
+
+		function workoutFor(date) {
+			const base = monthlyCoaches[displayedMonth.getMonth()];
+			const index = (date.getDay() + date.getDate() - 1) % base.exercises.length;
+			const names = ['가뿐한', '차근차근', '상쾌한', '편안한', '든든한'];
+			return {
+				name: index === 0 ? base.plan : `${names[(date.getDay() + 2) % names.length]} ${base.plan}`,
+				exercises: base.exercises
+			};
+		}
+
+		function renderCalendar() {
+			const calendar = document.getElementById('calendar');
+			const year = displayedMonth.getFullYear();
+			const month = displayedMonth.getMonth();
+			const firstDay = new Date(year, month, 1).getDay();
+			const daysInMonth = new Date(year, month + 1, 0).getDate();
+			const cells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+			calendar.innerHTML = '';
+
+			weekdays.forEach((weekday) => {
+				const label = document.createElement('div');
+				label.className = 'weekday';
+				label.setAttribute('role', 'columnheader');
+				label.textContent = weekday;
+				calendar.append(label);
+			});
+
+			for (let index = 0; index < cells; index += 1) {
+				const date = new Date(year, month, index - firstDay + 1);
+				const key = dateKey(date);
+				const inMonth = date.getMonth() === month;
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'day-button';
+				button.setAttribute('role', 'gridcell');
+				button.setAttribute('aria-label', `${date.getMonth() + 1}월 ${date.getDate()}일${completedDates.has(key) ? ', 운동 완료' : ''}`);
+				button.setAttribute('aria-pressed', String(key === dateKey(selectedDate)));
+				button.textContent = String(date.getDate());
+				if (!inMonth) button.classList.add('outside');
+				if (date.getDay() === 0 && inMonth) button.classList.add('sunday');
+				if (key === dateKey(today)) button.classList.add('today');
+				if (key === dateKey(selectedDate)) button.classList.add('selected');
+				if (completedDates.has(key)) {
+					const dot = document.createElement('span');
+					dot.className = 'day-dot';
+					dot.setAttribute('aria-hidden', 'true');
+					button.append(dot);
+				}
+				button.addEventListener('click', () => {
+					selectedDate = date;
+					if (!inMonth) displayedMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+					render();
+				});
+				const cell = document.createElement('div');
+				cell.className = 'day-cell';
+				cell.setAttribute('role', 'presentation');
+				cell.append(button);
+				calendar.append(cell);
+			}
+		}
+
+		function renderCoach() {
+			const coach = monthlyCoaches[displayedMonth.getMonth()];
+			document.getElementById('coach-card').style.setProperty('--coach-bg', coach.bg);
+			document.getElementById('coach-month').textContent = `${displayedMonth.getMonth() + 1}월의 친구`;
+			document.getElementById('mascot').textContent = coach.animal;
+			document.getElementById('mascot').setAttribute('aria-label', coach.name);
+			document.getElementById('coach-cheer').textContent = coach.cheer;
+			document.getElementById('coach-quote').textContent = coach.quote;
+		}
+
+		function renderWorkout() {
+			const plan = workoutFor(selectedDate);
+			const dateText = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(selectedDate);
+			const key = dateKey(selectedDate);
+			const done = completedDates.has(key);
+			document.getElementById('selected-date').textContent = dateText;
+			document.getElementById('workout-name').textContent = plan.name;
+			document.getElementById('workout-description').textContent = '호흡을 편하게 유지하면서, 가능한 만큼만 따라 해봐요.';
+			document.getElementById('exercise-list').innerHTML = plan.exercises.map(([name, amount]) => `<li><span>${name}</span><strong>${amount}</strong></li>`).join('');
+			document.getElementById('complete-button').classList.toggle('done', done);
+			document.getElementById('complete-button').innerHTML = done ? '<span aria-hidden="true">✓</span> 오늘 운동 완료' : '<span aria-hidden="true">＋</span> 운동 완료 기록';
+			document.getElementById('complete-button').setAttribute('aria-pressed', String(done));
+			document.getElementById('completion-hint').textContent = done ? '오늘의 한 걸음, 정말 멋져요!' : '내 속도로 천천히 해봐요';
+		}
+
+		function renderSummary() {
+			const currentMonth = monthKey(displayedMonth);
+			const monthTotal = [...completedDates].filter((key) => key.startsWith(`${currentMonth}-`)).length;
+			const weekStart = new Date(selectedDate);
+			weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
+			let weekTotal = 0;
+			for (let offset = 0; offset < 7; offset += 1) {
+				const date = new Date(weekStart);
+				date.setDate(weekStart.getDate() + offset);
+				if (completedDates.has(dateKey(date))) weekTotal += 1;
+			}
+			document.getElementById('month-count').textContent = monthTotal;
+			document.getElementById('week-count').textContent = `이번 주 ${weekTotal}일 완료`;
+		}
+
+		function render() {
+			document.getElementById('month-label').innerHTML = `${displayedMonth.getMonth() + 1}월 <span>${displayedMonth.getFullYear()}</span>`;
+			renderCalendar();
+			renderCoach();
+			renderWorkout();
+			renderSummary();
+		}
+
+		document.getElementById('prev-month').addEventListener('click', () => {
+			displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
+			selectedDate = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
+			render();
+		});
+
+		document.getElementById('next-month').addEventListener('click', () => {
+			displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1);
+			selectedDate = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth(), 1);
+			render();
+		});
+
+		document.getElementById('go-today').addEventListener('click', () => {
+			displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+			selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+			render();
+		});
+
+		document.getElementById('complete-button').addEventListener('click', () => {
+			const key = dateKey(selectedDate);
+			if (completedDates.has(key)) completedDates.delete(key);
+			else completedDates.add(key);
+			localStorage.setItem(storageKey, JSON.stringify([...completedDates]));
+			render();
+		});
+
+		render();
+	</script>
+</body>
+</html>
